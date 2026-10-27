@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSA // Image Operations Center</title>
+    <style>
+        /* ==========================================================================
+           1. CORE STYLES & CYBER THEME (CSS)
+           ========================================================================== */
+        :root {
+            --bg-dark: #050811;
+            --panel-bg: rgba(10, 17, 32, 0.75);
+            --panel-border: #132f52;
+            --panel-border-glow: #00f0ff33;
+            --cyan-primary: #00f0ff;
+            --cyan-dim: #00a8b3;
+            --neon-blue: #0066ff;
+            --alert-red: #ff3366;
+            --warning-yellow: #ffcc00;
+            --success-green: #00ff66;
+            --text-main: #cce7ff;
+            --text-muted: #5880a8;
+            --font-mono: 'Courier New', Courier, monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08), transparent 70%),
+                linear-gradient(rgba(19, 47, 82, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(19, 47, 82, 0.15) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+            padding: 15px;
+        }
+
+        /* Container Layout */
+        .app-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Cyber Panel Shell */
+        .cyber-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            box-shadow: 0 0 15px var(--panel-border-glow);
+            backdrop-filter: blur(8px);
+            position: relative;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .cyber-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 10px; height: 10px;
+            border-top: 2px solid var(--cyan-primary);
+            border-left: 2px solid var(--cyan-primary);
+        }
+
+        .cyber-panel::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 10px; height: 10px;
+            border-bottom: 2px solid var(--cyan-primary);
+            border-right: 2px solid var(--cyan-primary);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-family: var(--font-mono);
+            letter-spacing: 1px;
+        }
+
+        .panel-title {
+            color: var(--cyan-primary);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Header Layout */
+        header.cyber-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--cyan-primary);
+            background: rgba(5, 8, 17, 0.9);
+        }
+
+        .brand-title h1 {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            color: #fff;
+            text-shadow: 0 0 10px var(--cyan-primary);
+            letter-spacing: 2px;
+        }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--cyan-primary);
+            font-family: var(--font-mono);
+            letter-spacing: 3px;
+        }
+
+        /* Grid Layouts */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Stats Card */
+        .stat-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--panel-border);
+            padding: 12px 15px;
+            border-radius: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-family: var(--font-mono);
+            color: var(--cyan-primary);
+            margin-top: 4px;
+        }
+
+        /* Form & Inputs */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            margin-bottom: 5px;
+            font-family: var(--font-mono);
+        }
+
+        .cyber-input, .cyber-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--panel-border);
+            color: var(--cyan-primary);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            border-radius: 3px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .cyber-input:focus {
+            border-color: var(--cyan-primary);
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+        }
+
+        /* Upload Dropzone */
+        .dropzone {
+            border: 2px dashed var(--panel-border);
+            padding: 30px 15px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--cyan-primary);
+            background: rgba(0, 240, 255, 0.05);
+        }
+
+        /* Buttons */
+        .cyber-btn {
+            background: linear-gradient(135deg, rgba(0,240,255,0.2) 0%, rgba(0,102,255,0.4) 100%);
+            border: 1px solid var(--cyan-primary);
+            color: #fff;
+            padding: 10px 18px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .cyber-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(0,240,255,0.4) 0%, rgba(0,102,255,0.6) 100%);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+        }
+
+        .cyber-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: var(--text-muted);
+        }
+
+        .cyber-btn.danger {
+            background: rgba(255, 51, 102, 0.15);
+            border-color: var(--alert-red);
+            color: var(--alert-red);
+        }
+
+        .cyber-btn.danger:hover:not(:disabled) {
+            background: rgba(255, 51, 102, 0.3);
+            box-shadow: 0 0 12px rgba(255, 51, 102, 0.4);
+        }
+
+        .cyber-btn.sm {
+            padding: 5px 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Preview Card */
+        .preview-box {
+            display: flex;
+            gap: 15px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--panel-border);
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+
+        .preview-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border: 1px solid var(--cyan-primary);
+        }
+
+        .preview-info {
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+            overflow: hidden;
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--panel-border);
+            margin-top: 15px;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--cyan-primary);
+            box-shadow: 0 0 8px var(--cyan-primary);
+            transition: width 0.2s;
+        }
+
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .gallery-item {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid #132f52;
+        }
+
+        .gallery-title {
+            font-size: 0.8rem;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: bold;
+        }
+
+        .gallery-meta {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .gallery-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: auto;
+        }
+
+        /* System Diagnostics Console */
+        .console-log {
+            background: #020408;
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            height: 150px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-entry {
+            line-height: 1.3;
+        }
+        .log-info { color: var(--cyan-primary); }
+        .log-success { color: var(--success-green); }
+        .log-warn { color: var(--warning-yellow); }
+        .log-error { color: var(--alert-red); }
+
+        /* Notification Toast */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: rgba(10, 17, 32, 0.95);
+            border: 1px solid var(--cyan-primary);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            box-shadow: 0 0 15px rgba(0,240,255,0.3);
+            animation: slideIn 0.3s forwards;
+            max-width: 350px;
+        }
+
+        .toast.error {
+            border-color: var(--alert-red);
+            box-shadow: 0 0 15px rgba(255,51,102,0.3);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            border: 1px dashed var(--panel-border);
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 0.7rem;
+            font-family: var(--font-mono);
+        }
+        .badge-success { background: rgba(0,255,102,0.15); color: var(--success-green); border: 1px solid var(--success-green); }
+        .badge-warning { background: rgba(255,204,0,0.15); color: var(--warning-yellow); border: 1px solid var(--warning-yellow); }
+        .badge-danger { background: rgba(255,51,102,0.15); color: var(--alert-red); border: 1px solid var(--alert-red); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- HEADER SYSTEM -->
+    <header class="cyber-panel cyber-header">
+        <div class="brand-title">
+            <div class="brand-sub">CSA // DIGITAL OPERATIONS</div>
+            <h1>IMAGE OPERATIONS CENTER</h1>
+        </div>
+        <div>
+            <span id="sys-status-badge" class="badge badge-warning">SYS_INIT // WAIT_CONFIG</span>
+        </div>
+    </header>
+
+    <!-- DASHBOARD STATISTIK -->
+    <section class="cyber-panel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                System Telemetry Dashboard
+            </div>
+        </div>
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Upload Local</div>
+                <div class="stat-value" id="stat-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">API Config Status</div>
+                <div class="stat-value" id="stat-api-status" style="font-size:1rem; color:var(--warning-yellow);">KEY_MISSING</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Key Storage Mode</div>
+                <div class="stat-value" id="stat-storage-mode" style="font-size:1rem;">MEMORY_ONLY</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Host Endpoint</div>
+                <div class="stat-value" style="font-size:0.8rem; word-break:break-all; color:#fff;" id="stat-endpoint-display">https://freeimage.host/api/1/upload</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN TWO COLUMN LAYOUT -->
+    <div class="main-layout">
+        
+        <!-- MODULE 1: UPLOAD CENTER -->
+        <section class="cyber-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Module 01 // Upload Operations
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="image-title">Judul Gambar / Label Opsional</label>
+                <input type="text" id="image-title" class="cyber-input" placeholder="Misal: Satellite Scan #402">
+            </div>
+
+            <div class="dropzone" id="dropzone">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-primary)" stroke-width="1.5" style="margin-bottom:10px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <p style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-main);">
+                    Klik atau Seret Gambar Ke Sini
+                </p>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">
+                    Format yang didukung: PNG, JPG, GIF, WEBP, BMP (Maks 64MB)
+                </p>
+                <input type="file" id="file-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div id="file-preview-container" class="preview-box" style="display: none;">
+                <img id="preview-img" class="preview-thumb" src="" alt="Pratinjau">
+                <div class="preview-info">
+                    <div id="preview-name" style="color:#fff; font-weight:bold;">filename.jpg</div>
+                    <div id="preview-size" style="color:var(--cyan-primary);">0 KB</div>
+                    <div id="preview-type" style="color:var(--text-muted);">image/jpeg</div>
+                </div>
+            </div>
+
+            <div class="progress-bar-container" id="progress-container">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+
+            <button id="btn-upload" class="cyber-btn" style="width: 100%; margin-top: 15px;" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Transmit Image Payload
+            </button>
+
+            <!-- LATEST UPLOAD RESULT -->
+            <div id="last-result-box" style="display: none; margin-top: 20px; border-top: 1px dashed var(--panel-border); padding-top: 15px;">
+                <div class="form-label" style="color: var(--success-green);">// Transmission Successful</div>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <img id="result-thumb" src="" style="width: 60px; height: 60px; object-fit: cover; border: 1px solid var(--cyan-primary);">
+                    <div style="font-family: var(--font-mono); font-size: 0.8rem; overflow: hidden;">
+                        <div id="result-dims" style="color: var(--cyan-primary);">Dimensi: -</div>
+                        <div id="result-size" style="color: var(--text-muted);">Ukuran: -</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Direct Image Link URL</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="result-direct-url" class="cyber-input" readonly>
+                        <button class="cyber-btn sm" onclick="copyInputText('result-direct-url')">Salin</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Viewer Page URL</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="result-viewer-url" class="cyber-input" readonly>
+                        <button class="cyber-btn sm" onclick="copyInputText('result-viewer-url')">Salin</button>
+                    </div>
+                </div>
+                <a id="result-open-btn" href="#" target="_blank" class="cyber-btn sm" style="text-decoration: none; width: 100%;">
+                    Buka Gambar Di Tab Baru
+                </a>
+            </div>
+        </section>
+
+        <!-- MODULE 2: API CONFIGURATION & CREDENTIALS -->
+        <section class="cyber-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Module 02 // Endpoint & Authentication
+                </div>
+            </div>
+
+            <form id="api-config-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label class="form-label" for="api-endpoint">Target Upload Endpoint</label>
+                    <input type="url" id="api-endpoint" class="cyber-input" value="https://freeimage.host/api/1/upload" required>
+                    <span style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">Endpoint resmi v1 Freeimage.host API</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="api-key">Freeimage.host API Key</label>
+                    <input type="password" id="api-key" class="cyber-input" placeholder="Masukkan 6361... API Key Anda" autocomplete="off">
+                    <span style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">Dapatkan dari menu API di akun Freeimage.host Anda</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="api-format">Response Format Parameter</label>
+                    <select id="api-format" class="cyber-select">
+                        <option value="json" selected>JSON (Default - Recommended)</option>
+                        <option value="txt">TXT (Plain Text URL)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="remember-key" style="accent-color: var(--cyan-primary);">
+                    <label for="remember-key" style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--warning-yellow); cursor: pointer;">
+                        Simpan API Key di Browser (localStorage)
+                    </label>
+                </div>
+                
+                <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 15px; font-family: var(--font-mono);">
+                    ⚠️ WARNING: Penyimpanan localStorage tidak terenkripsi. Jangan aktifkan pada komputer publik.
+                </p>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" id="btn-save-config" class="cyber-btn" style="flex: 1;">
+                        Simpan Konfigurasi
+                    </button>
+                    <button type="button" id="btn-purge-key" class="cyber-btn danger" style="flex: 1;">
+                        Hapus Key Dari Memori
+                    </button>
+                </div>
+            </form>
+        </section>
+
+    </div>
+
+    <!-- MODULE 3: GALLERY & LOCAL HISTORY -->
+    <section class="cyber-panel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M20.4 14.5L16 10 4 20"/></svg>
+                Module 03 // Local Vault & Transmission Log
+            </div>
+            <button id="btn-clear-history" class="cyber-btn danger sm">
+                Wipe Local Vault
+            </button>
+        </div>
+
+        <p style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 15px;">
+            ℹ️ Catatan Penjelasan: Galeri ini hanya menyimpan *metadata & URL* hasil upload lokal pada browser ini. Menghapus riwayat lokal tidak menghapus berkas yang telah tersimpan di server Freeimage.host.
+        </p>
+
+        <div id="gallery-container" class="gallery-grid">
+            <!-- Items rendered via JS -->
+        </div>
+        <div id="gallery-empty" class="empty-state" style="display: none;">
+            [ NO TRANSMISSION DATA RECORDED IN LOCAL VAULT ]
+        </div>
+    </section>
+
+    <!-- MODULE 4: SYSTEM DIAGNOSTICS & LOGS -->
+    <section class="cyber-panel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 12 13 20 5"/><polyline points="20 11 20 5 14 5"/></svg>
+                Module 04 // System Diagnostics & Network Console
+            </div>
+            <button class="cyber-btn sm" onclick="clearConsole()">Clear Logs</button>
+        </div>
+
+        <div class="console-log" id="console-output">
+            <div class="log-entry log-info">[SYS_INIT] CSA Image Operations Center Engine online...</div>
+            <div class="log-entry log-info">[SYS_INIT] Checking local storage credentials...</div>
+        </div>
+    </section>
+
+</div>
+
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ==========================================================================
+     2. JAVASCRIPT LOGIC & API INTEGRATION
+     ========================================================================== -->
+<script>
+    /**
+     * CSA - Image Operations Center Core Application
+     * Standard Compliant for Freeimage.host API v1
+     */
+
+    // --- STATE MANAGEMENT ---
+    const APP_STATE = {
+        apiKey: '',
+        endpoint: 'https://freeimage.host/api/1/upload',
+        format: 'json',
+        rememberKey: false,
+        selectedFile: null,
+        uploadHistory: []
+    };
+
+    const STORAGE_KEYS = {
+        API_KEY: 'csa_freeimage_key',
+        CONFIG: 'csa_api_config',
+        HISTORY: 'csa_upload_history'
+    };
+
+    // --- DOM ELEMENTS ---
+    const DOM = {
+        apiKeyInput: document.getElementById('api-key'),
+        endpointInput: document.getElementById('api-endpoint'),
+        formatSelect: document.getElementById('api-format'),
+        rememberKeyCheck: document.getElementById('remember-key'),
+        btnSaveConfig: document.getElementById('btn-save-config'),
+        btnPurgeKey: document.getElementById('btn-purge-key'),
+        
+        fileInput: document.getElementById('file-input'),
+        dropzone: document.getElementById('dropzone'),
+        imageTitleInput: document.getElementById('image-title'),
+        btnUpload: document.getElementById('btn-upload'),
+        
+        previewContainer: document.getElementById('file-preview-container'),
+        previewImg: document.getElementById('preview-img'),
+        previewName: document.getElementById('preview-name'),
+        previewSize: document.getElementById('preview-size'),
+        previewType: document.getElementById('preview-type'),
+        
+        progressContainer: document.getElementById('progress-container'),
+        progressFill: document.getElementById('progress-fill'),
+        
+        lastResultBox: document.getElementById('last-result-box'),
+        resultThumb: document.getElementById('result-thumb'),
+        resultDims: document.getElementById('result-dims'),
+        resultSize: document.getElementById('result-size'),
+        resultDirectUrl: document.getElementById('result-direct-url'),
+        resultViewerUrl: document.getElementById('result-viewer-url'),
+        resultOpenBtn: document.getElementById('result-open-btn'),
+        
+        galleryContainer: document.getElementById('gallery-container'),
+        galleryEmpty: document.getElementById('gallery-empty'),
+        btnClearHistory: document.getElementById('btn-clear-history'),
+        
+        statCount: document.getElementById('stat-count'),
+        statApiStatus: document.getElementById('stat-api-status'),
+        statStorageMode: document.getElementById('stat-storage-mode'),
+        statEndpointDisplay: document.getElementById('stat-endpoint-display'),
+        sysStatusBadge: document.getElementById('sys-status-badge'),
+        consoleOutput: document.getElementById('console-output')
+    };
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        loadConfiguration();
+        loadHistory();
+        setupEventListeners();
+        logConsole('System ready for transmission.', 'info');
+    });
+
+    // --- CONFIGURATION MANAGEMENT ---
+    function loadConfiguration() {
+        const savedConfig = localStorage.getItem(STORAGE_KEYS.CONFIG);
+        if (savedConfig) {
+            try {
+                const parsed = JSON.parse(savedConfig);
+                if (parsed.endpoint) APP_STATE.endpoint = parsed.endpoint;
+                if (parsed.format) APP_STATE.format = parsed.format;
+                DOM.endpointInput.value = APP_STATE.endpoint;
+                DOM.formatSelect.value = APP_STATE.format;
+            } catch (e) {
+                logConsole('Error parsing saved API configuration', 'warn');
+            }
+        }
+
+        const savedKey = localStorage.getItem(STORAGE_KEYS.API_KEY);
+        if (savedKey) {
+            APP_STATE.apiKey = savedKey;
+            APP_STATE.rememberKey = true;
+            DOM.apiKeyInput.value = savedKey;
+            DOM.rememberKeyCheck.checked = true;
+            logConsole('API key loaded from persistent localStorage.', 'warn');
+        } else {
+            APP_STATE.rememberKey = false;
+            DOM.rememberKeyCheck.checked = false;
+        }
+
+        updateDashboardTelemetry();
+    }
+
+    function saveConfiguration() {
+        const inputKey = DOM.apiKeyInput.value.trim();
+        const inputEndpoint = DOM.endpointInput.value.trim();
+        const inputFormat = DOM.formatSelect.value;
+        const remember = DOM.rememberKeyCheck.checked;
+
+        if (!inputEndpoint) {
+            showToast('Endpoint URL tidak boleh kosong!', 'error');
+            return;
+        }
+
+        APP_STATE.apiKey = inputKey;
+        APP_STATE.endpoint = inputEndpoint;
+        APP_STATE.format = inputFormat;
+        APP_STATE.rememberKey = remember;
+
+        // Save Config
+        localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify({
+            endpoint: inputEndpoint,
+            format: inputFormat
+        }));
+
+        // Handle Key Storage Security Rule
+        if (remember) {
+            if (inputKey) {
+                localStorage.setItem(STORAGE_KEYS.API_KEY, inputKey);
+                showToast('API Key disimpan di LocalStorage (Hati-hati pada publik PC)', 'warning');
+            }
+        } else {
+            localStorage.removeItem(STORAGE_KEYS.API_KEY);
+            showToast('API Key tersimpan sementara di memori browser saja', 'info');
+        }
+
+        updateDashboardTelemetry();
+        logConsole('API Configuration updated successfully.', 'success');
+        validateUploadButtonState();
+    }
+
+    function purgeApiKey() {
+        APP_STATE.apiKey = '';
+        DOM.apiKeyInput.value = '';
+        localStorage.removeItem(STORAGE_KEYS.API_KEY);
+        logConsole('API key wiped from memory and local storage.', 'warn');
+        showToast('API Key berhasil dihapus dari memori!', 'info');
+        updateDashboardTelemetry();
+        validateUploadButtonState();
+    }
+
+    function updateDashboardTelemetry() {
+        DOM.statCount.textContent = APP_STATE.uploadHistory.length;
+        DOM.statEndpointDisplay.textContent = APP_STATE.endpoint;
+
+        if (APP_STATE.apiKey) {
+            DOM.statApiStatus.textContent = 'KEY_CONFIGURED';
+            DOM.statApiStatus.style.color = 'var(--success-green)';
+            DOM.sysStatusBadge.textContent = 'SYS_READY // ONLINE';
+            DOM.sysStatusBadge.className = 'badge badge-success';
+        } else {
+            DOM.statApiStatus.textContent = 'KEY_MISSING';
+            DOM.statApiStatus.style.color = 'var(--warning-yellow)';
+            DOM.sysStatusBadge.textContent = 'SYS_WAIT // NO_KEY';
+            DOM.sysStatusBadge.className = 'badge badge-warning';
+        }
+
+        if (APP_STATE.rememberKey && APP_STATE.apiKey) {
+            DOM.statStorageMode.textContent = 'LOCAL_STORAGE';
+            DOM.statStorageMode.style.color = 'var(--warning-yellow)';
+        } else {
+            DOM.statStorageMode.textContent = 'MEMORY_ONLY';
+            DOM.statStorageMode.style.color = 'var(--cyan-primary)';
+        }
+    }
+
+    // --- FILE HANDLING & VALIDATION ---
+    function setupEventListeners() {
+        DOM.btnSaveConfig.addEventListener('click', saveConfiguration);
+        DOM.btnPurgeKey.addEventListener('click', purgeApiKey);
+        DOM.btnClearHistory.addEventListener('click', clearLocalHistory);
+
+        // File Select Events
+        DOM.dropzone.addEventListener('click', () => DOM.fileInput.click());
+        DOM.fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag & Drop
+        DOM.dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            DOM.dropzone.classList.add('dragover');
+        });
+        DOM.dropzone.addEventListener('dragleave', () => {
+            DOM.dropzone.classList.remove('dragover');
+        });
+        DOM.dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            DOM.dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                DOM.fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+
+        // Upload Button
+        DOM.btnUpload.addEventListener('click', executeImageUpload);
+    }
+
+    function handleFileSelect() {
+        const file = DOM.fileInput.files[0];
+        if (!file) return;
+
+        // Client-side MIME Type Validation
+        if (!file.type.startsWith('image/')) {
+            showToast('Berkas terpilih bukan gambar valid!', 'error');
+            logConsole(`Validation failed: File [${file.name}] is not an image MIME type.`, 'error');
+            resetFileSelection();
+            return;
+        }
+
+        // Size Limit Warning (64MB)
+        const maxBytes = 64 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            showToast('Ukuran gambar melebihi batas 64MB!', 'error');
+            logConsole(`Validation failed: File [${file.name}] exceeds 64MB size limit.`, 'error');
+            resetFileSelection();
+            return;
+        }
+
+        APP_STATE.selectedFile = file;
+
+        // Show File Preview
+        DOM.previewName.textContent = escapeHTML(file.name);
+        DOM.previewSize.textContent = formatBytes(file.size);
+        DOM.previewType.textContent = file.type || 'image/unknown';
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            DOM.previewImg.src = e.target.result;
+            DOM.previewContainer.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+
+        logConsole(`Selected payload: ${file.name} (${formatBytes(file.size)})`, 'info');
+        validateUploadButtonState();
+    }
+
+    function resetFileSelection() {
+        APP_STATE.selectedFile = null;
+        DOM.fileInput.value = '';
+        DOM.previewContainer.style.display = 'none';
+        DOM.previewImg.src = '';
+        validateUploadButtonState();
+    }
+
+    function validateUploadButtonState() {
+        if (APP_STATE.selectedFile && APP_STATE.apiKey) {
+            DOM.btnUpload.disabled = false;
+        } else {
+            DOM.btnUpload.disabled = true;
+        }
+    }
+
+    // --- TRANSMISSION / UPLOAD ENGINE ---
+    function executeImageUpload() {
+        if (!APP_STATE.selectedFile) {
+            showToast('Silakan pilih berkas gambar terlebih dahulu.', 'error');
+            return;
+        }
+        if (!APP_STATE.apiKey) {
+            showToast('API Key belum diisi pada Module 02!', 'error');
+            return;
+        }
+
+        const file = APP_STATE.selectedFile;
+        const endpoint = APP_STATE.endpoint;
+        const key = APP_STATE.apiKey;
+        const format = APP_STATE.format;
+
+        logConsole(`Initiating POST transmission to ${endpoint}...`, 'info');
+
+        // UI State Loading
+        DOM.btnUpload.disabled = true;
+        DOM.progressContainer.style.display = 'block';
+        DOM.progressFill.style.width = '20%';
+
+        // Prepare FormData according to official Freeimage.host API v1 spec
+        // POST /api/1/upload
+        // Parameters: key (required), action (upload), source (file), format (json/txt)
+        // CRITICAL: Do NOT set Content-Type header manually when using FormData!
+        const formData = new FormData();
+        formData.append('key', key);
+        formData.append('action', 'upload');
+        formData.append('source', file);
+        formData.append('format', format);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint, true);
+
+        // Upload progress simulation
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                DOM.progressFill.style.width = percent + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            DOM.progressContainer.style.display = 'none';
+            DOM.progressFill.style.width = '0%';
+
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    if (format === 'txt') {
+                        // Plain Text Response
+                        const directUrl = xhr.responseText.trim();
+                        handleUploadSuccess({
+                            directUrl: directUrl,
+                            viewerUrl: directUrl,
+                            thumbUrl: directUrl,
+                            width: '-',
+                            height: '-',
+                            size: file.size
+                        });
+                    } else {
+                        // JSON Response
+                        const response = JSON.parse(xhr.responseText);
+                        parseAndHandleJsonResponse(response, file);
+                    }
+                } catch (e) {
+                    logConsole(`JSON Parse Error: ${e.message}`, 'error');
+                    showToast('Gagal memproses respons JSON dari server API.', 'error');
+                    DOM.btnUpload.disabled = false;
+                }
+            } else {
+                handleHttpError(xhr);
+                DOM.btnUpload.disabled = false;
+            }
+        };
+
+        xhr.onerror = function() {
+            DOM.progressContainer.style.display = 'none';
+            DOM.btnUpload.disabled = false;
+            logConsole('Network Transmission Failure / Possible CORS Block.', 'error');
+            showToast('Koneksi terputus atau diblokir oleh kebijakan CORS Browser!', 'error');
+            explainCorsIssue();
+        };
+
+        xhr.send(formData);
+    }
+
+    function parseAndHandleJsonResponse(data, originalFile) {
+        // According to Chevereto/Freeimage.host V1 JSON API format:
+        // Response contains status_code, success object, and image object
+        if (data.status_code === 200 || (data.success && data.success.code === 200)) {
+            const imgData = data.image;
+            const directUrl = imgData.url || (imgData.file ? imgData.file.resource.chain.image : '');
+            const viewerUrl = imgData.url_viewer || imgData.display_url || directUrl;
+            const thumbUrl = imgData.medium?.url || imgData.thumb?.url || directUrl;
+
+            handleUploadSuccess({
+                directUrl: directUrl,
+                viewerUrl: viewerUrl,
+                thumbUrl: thumbUrl,
+                width: imgData.width || '-',
+                height: imgData.height || '-',
+                size: imgData.size || originalFile.size
+            });
+        } else {
+            const errorMsg = data.error ? data.error.message : 'Upload ditolak oleh API Freeimage.host';
+            logConsole(`API Error Response: ${errorMsg}`, 'error');
+            showToast(`API Error: ${errorMsg}`, 'error');
+            DOM.btnUpload.disabled = false;
+        }
+    }
+
+    function handleUploadSuccess(resultData) {
+        logConsole('Image uploaded successfully to server!', 'success');
+        showToast('Unggah gambar berhasil dilakukan!', 'success');
+
+        // Display Latest Result UI
+        DOM.resultThumb.src = resultData.thumbUrl;
+        DOM.resultDims.textContent = `Dimensi: ${resultData.width} x ${resultData.height} px`;
+        DOM.resultSize.textContent = `Ukuran: ${formatBytes(resultData.size)}`;
+        DOM.resultDirectUrl.value = resultData.directUrl;
+        DOM.resultViewerUrl.value = resultData.viewerUrl;
+        DOM.resultOpenBtn.href = resultData.directUrl;
+        DOM.lastResultBox.style.display = 'block';
+
+        // Add to Local Vault / History
+        const customTitle = DOM.imageTitleInput.value.trim() || APP_STATE.selectedFile.name;
+        const historyItem = {
+            id: 'csa_' + Date.now(),
+            filename: APP_STATE.selectedFile.name,
+            title: customTitle,
+            directUrl: resultData.directUrl,
+            viewerUrl: resultData.viewerUrl,
+            thumbUrl: resultData.thumbUrl,
+            timestamp: new Date().toISOString()
+        };
+
+        saveHistoryItem(historyItem);
+        resetFileSelection();
+        DOM.imageTitleInput.value = '';
+    }
+
+    function handleHttpError(xhr) {
+        logConsole(`HTTP Exception: Status Code ${xhr.status}`, 'error');
+        let detail = `Status ${xhr.status}: ${xhr.statusText}`;
+        try {
+            const errJson = JSON.parse(xhr.responseText);
+            if (errJson.error && errJson.error.message) {
+                detail += ` - ${errJson.error.message}`;
+            }
+        } catch(e) {}
+        showToast(`Gagal Unggah: ${detail}`, 'error');
+    }
+
+    function explainCorsIssue() {
+        logConsole('--- [DIAGNOSTIC: CORS / BROWSER SECURITY] ---', 'warn');
+        logConsole('Jika request gagal pada browser tanpa HTTP Status Code, browser mungkin memblokir Cross-Origin request ke freeimage.host.', 'warn');
+        logConsole('Solusi: Gunakan ekstensi Allow-CORS untuk pengujian lokal, atau jalankan melalui backend proxy server.', 'warn');
+    }
+
+    // --- LOCAL HISTORY & STORAGE VAULT ---
+    function loadHistory() {
+        const stored = localStorage.getItem(STORAGE_KEYS.HISTORY);
+        if (stored) {
+            try {
+                APP_STATE.uploadHistory = JSON.parse(stored);
+            } catch (e) {
+                APP_STATE.uploadHistory = [];
+            }
+        } else {
+            APP_STATE.uploadHistory = [];
+        }
+        renderGallery();
+        updateDashboardTelemetry();
+    }
+
+    function saveHistoryItem(item) {
+        APP_STATE.uploadHistory.unshift(item); // Add to start
+        try {
+            localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(APP_STATE.uploadHistory));
+            logConsole('History record added to Local Storage.', 'info');
+        } catch (e) {
+            if (e.name === 'QuotaExceededError' || e.code === 22) {
+                logConsole('QuotaExceededError: LocalStorage full! Trimming history.', 'error');
+                showToast('Penyimpanan lokal penuh. Menghapus riwayat lama.', 'warning');
+                APP_STATE.uploadHistory.pop(); // Remove oldest
+                localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(APP_STATE.uploadHistory));
+            }
+        }
+        renderGallery();
+        updateDashboardTelemetry();
+    }
+
+    function renderGallery() {
+        DOM.galleryContainer.innerHTML = '';
+
+        if (APP_STATE.uploadHistory.length === 0) {
+            DOM.galleryEmpty.style.display = 'block';
+            return;
+        }
+
+        DOM.galleryEmpty.style.display = 'none';
+
+        APP_STATE.uploadHistory.forEach((item) => {
+            const card = document.createElement('div');
+            card.className = 'gallery-item';
+
+            const dateStr = new Date(item.timestamp).toLocaleString('id-ID', {
+                dateStyle: 'short', timeStyle: 'short'
+            });
+
+            card.innerHTML = `
+                <img src="${escapeHTML(item.thumbUrl)}" alt="Uploaded" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%235880a8\' stroke-width=\'2\'><rect x=\'3\' y=\'3\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'9\' y1=\'9\' x2=\'15\' y2=\'15\'/><line x1=\'15\' y1=\'9\' x2=\'9\' y2=\'15\'/></svg>'">
+                <div class="gallery-title" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
+                <div class="gallery-meta">${dateStr}</div>
+                <div class="gallery-actions">
+                    <button class="cyber-btn sm" style="flex:1;" onclick="copyToClipboard('${escapeHTML(item.directUrl)}')">Copy URL</button>
+                    <a href="${escapeHTML(item.directUrl)}" target="_blank" class="cyber-btn sm" style="text-decoration:none;">Open</a>
+                </div>
+            `;
+
+            DOM.galleryContainer.appendChild(card);
+        });
+    }
+
+    function clearLocalHistory() {
+        if (APP_STATE.uploadHistory.length === 0) return;
+
+        const confirmWipe = confirm("APAKAH ANDA YAKIN?\n\nTindakan ini akan menghapus SELURUH CATATAN RIWAYAT LOKAL di browser ini.\n\n*Catatan: Gambar yang sudah diunggah ke Freeimage.host TETAP TERSEDIA secara online dan tidak terhapus dari server.");
+        
+        if (confirmWipe) {
+            APP_STATE.uploadHistory = [];
+            localStorage.removeItem(STORAGE_KEYS.HISTORY);
+            renderGallery();
+            updateDashboardTelemetry();
+            logConsole('Local Vault transmission log completely cleared.', 'warn');
+            showToast('Riwayat lokal berhasil dibersihkan!', 'info');
+        }
+    }
+
+    // --- UTILITY & HELPER FUNCTIONS ---
+    function copyInputText(inputId) {
+        const input = document.getElementById(inputId);
+        if (input && input.value) {
+            copyToClipboard(input.value);
+        }
+    }
+
+    function copyToClipboard(text) {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Link berhasil disalin ke clipboard!', 'success');
+            logConsole(`Copied to clipboard: ${text}`, 'info');
+        }).catch(() => {
+            showToast('Gagal menyalin otomatis.', 'error');
+        });
+    }
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
+    function logConsole(message, level = 'info') {
+        const entry = document.createElement('div');
+        const time = new Date().toISOString().substring(11, 19);
+        entry.className = `log-entry log-${level}`;
+        entry.textContent = `[${time}] [${level.toUpperCase()}] ${message}`;
+
+        DOM.consoleOutput.appendChild(entry);
+        DOM.consoleOutput.scrollTop = DOM.consoleOutput.scrollHeight;
+    }
+
+    function clearConsole() {
+        DOM.consoleOutput.innerHTML = '<div class="log-entry log-info">[SYS_CLEARED] Network log reset.</div>';
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+    }
+</script>
+</body>
+</html>
