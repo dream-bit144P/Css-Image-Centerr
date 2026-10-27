@@ -933,7 +933,7 @@
     }
 
     // --- TRANSMISSION / UPLOAD ENGINE ---
-    function executeImageUpload() {
+        function executeImageUpload() {
         if (!APP_STATE.selectedFile) {
             showToast('Silakan pilih berkas gambar terlebih dahulu.', 'error');
             return;
@@ -944,31 +944,23 @@
         }
 
         const file = APP_STATE.selectedFile;
-        const endpoint = APP_STATE.endpoint;
-        const key = APP_STATE.apiKey;
+        // Endpoint ImgBB wajib menyertakan key di query parameter URL
+        const endpoint = `https://api.imgbb.com/1/upload?key=${encodeURIComponent(APP_STATE.apiKey)}`;
         const format = APP_STATE.format;
 
-        logConsole(`Initiating POST transmission to ${endpoint}...`, 'info');
+        logConsole(`Initiating POST transmission to ImgBB...`, 'info');
 
-        // UI State Loading
         DOM.btnUpload.disabled = true;
         DOM.progressContainer.style.display = 'block';
         DOM.progressFill.style.width = '20%';
 
-        // Prepare FormData according to official Freeimage.host API v1 spec
-        // POST /api/1/upload
-        // Parameters: key (required), action (upload), source (file), format (json/txt)
-        // CRITICAL: Do NOT set Content-Type header manually when using FormData!
+        // ImgBB hanya butuh parameter 'image' (file binary / base64) di dalam FormData
         const formData = new FormData();
-        formData.append('key', key);
-        formData.append('action', 'upload');
-        formData.append('source', file);
-        formData.append('format', format);
+        formData.append('image', file);
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', endpoint, true);
 
-        // Upload progress simulation
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
                 const percent = Math.round((e.loaded / e.total) * 100);
@@ -982,25 +974,24 @@
 
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
-                    if (format === 'txt') {
-                        // Plain Text Response
-                        const directUrl = xhr.responseText.trim();
+                    const response = JSON.parse(xhr.responseText);
+                    // Parsing struktur respons JSON khusus ImgBB
+                    if (response.success && response.status === 200) {
+                        const imgData = response.data;
                         handleUploadSuccess({
-                            directUrl: directUrl,
-                            viewerUrl: directUrl,
-                            thumbUrl: directUrl,
-                            width: '-',
-                            height: '-',
-                            size: file.size
+                            directUrl: imgData.url,
+                            viewerUrl: imgData.url_viewer || imgData.url,
+                            thumbUrl: imgData.thumb?.url || imgData.url,
+                            width: imgData.width || '-',
+                            height: imgData.height || '-',
+                            size: imgData.size || file.size
                         });
                     } else {
-                        // JSON Response
-                        const response = JSON.parse(xhr.responseText);
-                        parseAndHandleJsonResponse(response, file);
+                        throw new Error('Respons API ImgBB tidak valid');
                     }
                 } catch (e) {
                     logConsole(`JSON Parse Error: ${e.message}`, 'error');
-                    showToast('Gagal memproses respons JSON dari server API.', 'error');
+                    showToast('Gagal memproses respons dari ImgBB.', 'error');
                     DOM.btnUpload.disabled = false;
                 }
             } else {
@@ -1012,86 +1003,14 @@
         xhr.onerror = function() {
             DOM.progressContainer.style.display = 'none';
             DOM.btnUpload.disabled = false;
-            logConsole('Network Transmission Failure / Possible CORS Block.', 'error');
-            showToast('Koneksi terputus atau diblokir oleh kebijakan CORS Browser!', 'error');
-            explainCorsIssue();
+            logConsole('Network Transmission Failure / CORS Block.', 'error');
+            showToast('Koneksi terputus atau diblokir CORS!', 'error');
         };
 
         xhr.send(formData);
-    }
-
-    function parseAndHandleJsonResponse(data, originalFile) {
-        // According to Chevereto/Freeimage.host V1 JSON API format:
-        // Response contains status_code, success object, and image object
-        if (data.status_code === 200 || (data.success && data.success.code === 200)) {
-            const imgData = data.image;
-            const directUrl = imgData.url || (imgData.file ? imgData.file.resource.chain.image : '');
-            const viewerUrl = imgData.url_viewer || imgData.display_url || directUrl;
-            const thumbUrl = imgData.medium?.url || imgData.thumb?.url || directUrl;
-
-            handleUploadSuccess({
-                directUrl: directUrl,
-                viewerUrl: viewerUrl,
-                thumbUrl: thumbUrl,
-                width: imgData.width || '-',
-                height: imgData.height || '-',
-                size: imgData.size || originalFile.size
-            });
-        } else {
-            const errorMsg = data.error ? data.error.message : 'Upload ditolak oleh API Freeimage.host';
-            logConsole(`API Error Response: ${errorMsg}`, 'error');
-            showToast(`API Error: ${errorMsg}`, 'error');
-            DOM.btnUpload.disabled = false;
         }
-    }
-
-    function handleUploadSuccess(resultData) {
-        logConsole('Image uploaded successfully to server!', 'success');
-        showToast('Unggah gambar berhasil dilakukan!', 'success');
-
-        // Display Latest Result UI
-        DOM.resultThumb.src = resultData.thumbUrl;
-        DOM.resultDims.textContent = `Dimensi: ${resultData.width} x ${resultData.height} px`;
-        DOM.resultSize.textContent = `Ukuran: ${formatBytes(resultData.size)}`;
-        DOM.resultDirectUrl.value = resultData.directUrl;
-        DOM.resultViewerUrl.value = resultData.viewerUrl;
-        DOM.resultOpenBtn.href = resultData.directUrl;
-        DOM.lastResultBox.style.display = 'block';
-
-        // Add to Local Vault / History
-        const customTitle = DOM.imageTitleInput.value.trim() || APP_STATE.selectedFile.name;
-        const historyItem = {
-            id: 'csa_' + Date.now(),
-            filename: APP_STATE.selectedFile.name,
-            title: customTitle,
-            directUrl: resultData.directUrl,
-            viewerUrl: resultData.viewerUrl,
-            thumbUrl: resultData.thumbUrl,
-            timestamp: new Date().toISOString()
-        };
-
-        saveHistoryItem(historyItem);
-        resetFileSelection();
-        DOM.imageTitleInput.value = '';
-    }
-
-    function handleHttpError(xhr) {
-        logConsole(`HTTP Exception: Status Code ${xhr.status}`, 'error');
-        let detail = `Status ${xhr.status}: ${xhr.statusText}`;
-        try {
-            const errJson = JSON.parse(xhr.responseText);
-            if (errJson.error && errJson.error.message) {
-                detail += ` - ${errJson.error.message}`;
-            }
-        } catch(e) {}
-        showToast(`Gagal Unggah: ${detail}`, 'error');
-    }
-
-    function explainCorsIssue() {
-        logConsole('--- [DIAGNOSTIC: CORS / BROWSER SECURITY] ---', 'warn');
-        logConsole('Jika request gagal pada browser tanpa HTTP Status Code, browser mungkin memblokir Cross-Origin request ke freeimage.host.', 'warn');
-        logConsole('Solusi: Gunakan ekstensi Allow-CORS untuk pengujian lokal, atau jalankan melalui backend proxy server.', 'warn');
-    }
+    
+    
 
     // --- LOCAL HISTORY & STORAGE VAULT ---
     function loadHistory() {
